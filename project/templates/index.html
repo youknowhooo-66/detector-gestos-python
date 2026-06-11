@@ -10,13 +10,24 @@
     <div class="container">
         <h1>Detector de Joinha</h1>
         
-        <div class="video-container">
-            <img src="{{ url_for('video_feed') }}" alt="Webcam Feed">
-        </div>
+        <div class="main-content">
+            <div class="video-section">
+                <div class="video-container">
+                    <img src="{{ url_for('video_feed') }}" alt="Webcam Feed">
+                </div>
 
-        <div id="status-indicator" class="status neutral">
-            <span id="status-dot">🔴</span>
-            <span id="status-text">Nenhum joinha detectado</span>
+                <div id="status-indicator" class="status neutral">
+                    <span id="status-dot">🔴</span>
+                    <span id="status-text">Nenhum joinha detectado</span>
+                </div>
+            </div>
+
+            <div class="log-section">
+                <h2>Registros</h2>
+                <ul id="log-list">
+                    <!-- Registros aparecerão aqui -->
+                </ul>
+            </div>
         </div>
     </div>
 
