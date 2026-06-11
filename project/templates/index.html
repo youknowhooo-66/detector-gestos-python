@@ -1,0 +1,25 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Detector de Joinha</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+    <div class="container">
+        <h1>Detector de Joinha</h1>
+        
+        <div class="video-container">
+            <img src="{{ url_for('video_feed') }}" alt="Webcam Feed">
+        </div>
+
+        <div id="status-indicator" class="status neutral">
+            <span id="status-dot">🔴</span>
+            <span id="status-text">Nenhum joinha detectado</span>
+        </div>
+    </div>
+
+    <script src="{{ url_for('static', filename='script.js') }}"></script>
+</body>
+</html>
