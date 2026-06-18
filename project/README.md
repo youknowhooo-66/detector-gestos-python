@@ -1,62 +1,62 @@
-# MVP: Detector de Joinha com Registro de Log
+# Detector de Gestos - Controle de Máquina
 
-Este projeto é um MVP (Minimum Viable Product) de um sistema de Visão Computacional que reconhece o gesto de "joinha" pela webcam e mantém um registro histórico de cada detecção com o respectivo horário.
+Este projeto utiliza inteligência artificial para simular o controle de uma máquina industrial através de gestos capturados pela webcam.
 
-## 🚀 Objetivo
-Criar um sistema capaz de detectar o gesto de "joinha" e "hang loose", registrando cada ocorrência em uma lista na tela apenas uma vez por gesto apresentado.
+## 🚀 Funcionalidades
 
-## ✨ Funcionalidades
-- **Câmera em Tempo Real:** Visualização fluida do feed da webcam no navegador.
-- **Detecção de Mãos:** Reconhecimento preciso de landmarks da mão utilizando MediaPipe.
-- **Reconhecimento de Gestos:** Identificação específica de "Joinha" e "Hang Loose".
-- **Lista de Registros:** Histórico dinâmico na tela mostrando: `Gesto detectado — HH:mm:ss`.
-- **Regra de Unicidade:** O sistema registra o gesto apenas uma vez enquanto ele permanece na câmera, evitando duplicatas repetitivas.
+- **Autenticação de Operador:** Tela de login inicial para identificação do usuário.
+- **Controle por Gestos:**
+  - 👍 **Joinha:** Liga a máquina.
+  - 🤙 **Hang Loose:** Desliga a máquina.
+- **Simulação em Tempo Real:** Interface visual que reflete o estado da máquina (LIGADA/DESLIGADA) com animações dinâmicas.
+- **Histórico de Operações:** Registro detalhado de quem executou a ação, qual gesto foi usado, o horário e o estado resultante da máquina.
+- **Evidências Fotográficas:** Captura automática de screenshot (com landmarks desenhados) a cada ação registrada, salva na pasta `screenshots/` sem interromper a fluidez do vídeo.
 
 ## 🛠️ Tecnologias Utilizadas
-- **Backend:** Python, Flask
-- **Visão Computacional:** OpenCV, MediaPipe (Tasks API)
-- **Frontend:** HTML5, CSS3 (Layout Responsivo), JavaScript (Vanilla)
 
-## 📦 Instalação e Execução
+- **Backend:** Python, Flask.
+- **Visão Computacional:** OpenCV, MediaPipe (Tasks API).
+- **Frontend:** HTML5, Vanilla CSS3, JavaScript.
 
-### Pré-requisitos
-- Python 3.14+
-- Webcam
+## 📋 Pré-requisitos
 
-### Passo a Passo
-1. **Ative o ambiente virtual:**
-   ```powershell
-   .\venv\Scripts\activate
+Certifique-se de ter o Python instalado e instale as dependências:
+
+```bash
+pip install -r requirements.txt
+```
+
+## 🏃 Como Executar
+
+1. Navegue até a pasta do projeto:
+   ```bash
+   cd project
    ```
-2. **Instale as dependências:**
-   ```powershell
-   pip install -r requirements.txt
-   ```
-3. **Inicie o servidor:**
-   ```powershell
+2. Execute o aplicativo:
+   ```bash
    python app.py
    ```
-4. **Acesse no navegador:**
-   [http://localhost:5000](http://localhost:5000)
+3. Abra o navegador em `http://localhost:5000`.
 
-## 🧠 Explicação Técnica (Para o Tech Lead)
+## 📂 Estrutura de Pastas
 
-### 1. Funcionamento da Câmera
-O backend (`app.py`) utiliza o OpenCV para capturar frames, processá-los com o MediaPipe e enviá-los via streaming multipart (MJPEG) para uma tag `<img>` no HTML.
+- `app.py`: Servidor Flask e lógica principal.
+- `hand_detector.py`: Wrapper para a API do MediaPipe.
+- `gesture_detector.py`: Lógica de classificação dos gestos.
+- `screenshots/`: Local onde as capturas de tela são armazenadas.
+- `static/`: Arquivos CSS e JavaScript.
+- `templates/`: Páginas HTML.
 
-### 2. Detecção do Gesto
-A lógica está concentrada em `gesture_detector.py`. O sistema verifica a posição relativa dos landmarks:
-- **Joinha:** Polegar aberto (acima da articulação) e demais dedos com as pontas abaixo das articulações médias (fechados).
+## 🧠 Detalhes Técnicos
 
-### 3. Registro de Horário e Log
-O frontend (`script.js`) consome uma API de status a cada 300ms. Quando um novo gesto é identificado:
-- O JavaScript captura o horário local da máquina (`new Date()`).
-- O log é inserido dinamicamente no topo da lista usando manipulação de DOM.
+### 1. Processamento de Vídeo
+O backend utiliza OpenCV para capturar frames e MediaPipe para detectar os 21 landmarks da mão. O streaming para o navegador é feito via MJPEG.
 
-### 4. Evitando Registros Repetidos
-Implementamos uma máquina de estados simples no frontend. Uma variável `currentActiveGesture` armazena o último gesto registrado. Um novo registro só é permitido se:
-- O novo gesto for diferente do atual.
-- O estado de "nenhum gesto" for detectado (reset), permitindo registrar o mesmo gesto novamente se ele for retirado e recolocado na câmera.
+### 2. Lógica Assíncrona de Screenshots
+Para evitar travamentos na interface, o salvamento das imagens é realizado em threads separadas (`threading`). Cada captura inclui o nome do operador e o timestamp.
+
+### 3. Máquina de Estados
+O sistema rastreia a transição entre os gestos para evitar múltiplos registros e capturas acidentais de um mesmo gesto mantido na câmera.
 
 ---
 **Desenvolvido para Desafio Técnico - 2026**
