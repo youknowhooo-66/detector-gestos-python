@@ -1,0 +1,469 @@
+# detector-gestos-python
+ > quero que adapte este projeto para incluir: Desenvolver um sistema web para simular o controle 
+   de uma máquina por reconhecimento de gestos.
+
+   O sistema deve iniciar com uma tela de login simples, onde o usuário informa no mínimo o seu   
+   nome.
+
+   Após o login, a webcam deve ser ativada e a tela principal deve exibir uma máquina simulada.   
+
+   Quando o sistema reconhecer o gesto de joinha, a máquina deve ligar.
+
+   Quando reconhecer o gesto de hang loose, a máquina deve desligar.
+
+   O sistema deve registrar no histórico:
+
+   nome do usuário;
+                                                                                                  
+   horário da ação;
+                                                                                                  
+   gesto identificado;
+                                                                                                  
+   estado da máquina.
+   Regras: para realização da atividade, esses requisitos devem ser implementados na atividade    
+   anterior, do reconhecimento do joinha.
+▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀
+
+  Researching Current Implementation: 
+  Exploring the codebase to understand the current implementation of gesture recognition and      
+  web interface.
+
+  ✓  ReadFolder  project → Found 12 item(s).
+  ✓  ReadFile  project\app.py
+  ✓  ReadFile  project\gesture_detector.py
+  ✓  ReadFile  project\hand_detector.py
+  ✓  ReadFile  project\templates\index.html
+  ✓  ReadFile  project\static\script.js
+  ✓  ReadFile  project\static\style.css
+  Implementing Backend Logic: 
+  Modifying the backend to handle authentication and machine state.
+
+  ✓  Edit  app.py → Accepted (+42, -7)
+
+        1   import cv2
+        2 - from flask import Flask, render_template, Response, jsonify
+        2 + from flask import Flask, render_template, Response, jsonify, request, session,
+          redirect, url_for
+        3   from hand_detector import HandDetector
+        4   from gesture_detector import GestureDetector
+        5   import sys
+        6 + from datetime import datetime
+        7
+        8   app = Flask(__name__)
+        9 + app.secret_key = 'supersecretkey' # Necessário para o uso de sessions
+       10
+       11   # Initialize detectors with error handling
+       12   try:
+       17       print(f"Erro crítico ao inicializar detectores: {e}")
+       18       sys.exit(1)
+       19
+       18 - # Global variable to store current gesture
+       20 + # Global variables
+       21   current_gesture = None
+       22 + machine_state = "DESLIGADA"
+       23
+       24   def gen_frames():
+       22 -     global current_gesture
+       25 +     global current_gesture, machine_state
+       26       cap = cv2.VideoCapture(0)
+       27
+       28       if not cap.isOpened():
+      ════════════════════════════════════════════════════════════════════════════════════════    
+       40               lm_list = detector.get_landmarks(img)
+       41
+       42               # Update current gesture
+       40 -             current_gesture = gesture.get_gesture(lm_list)
+       43 +             detected = gesture.get_gesture(lm_list)
+       44 +             current_gesture = detected
+       45
+       46 +             # Update machine state based on gesture
+       47 +             if detected == "joinha":
+       48 +                 machine_state = "LIGADA"
+       49 +             elif detected == "hang_loose":
+       50 +                 machine_state = "DESLIGADA"
+       51 + 
+       52               # Draw visual feedback on image
+       53               if current_gesture:
+       54                   display_text = current_gesture.replace("_", " ").upper()
+      ════════════════════════════════════════════════════════════════════════════════════════    
+       69
+       70   @app.route('/')
+       71   def index():
+       62 -     return render_template('index.html')
+      ════════════════════════════════════════════════════════════════════════════════════════    
+       72 +     if 'username' not in session:
+       73 +         return redirect(url_for('login'))
+       74 +     return render_template('index.html', username=session['username'])
+       75
+       76 + @app.route('/login', methods=['GET', 'POST'])
+       77 + def login():
+       78 +     if request.method == 'POST':
+       79 +         username = request.form.get('username')
+       80 +         if username:
+       81 +             session['username'] = username
+       82 +             return redirect(url_for('index'))
+       83 +     return render_template('login.html')
+       84 + 
+       85 + @app.route('/logout')
+       86 + def logout():
+       87 +     session.pop('username', None)
+       88 +     return redirect(url_for('login'))
+       89 + 
+       90   @app.route('/video_feed')
+       91   def video_feed():
+       92 +     if 'username' not in session:
+       93 +         return "Unauthorized", 401
+       94      return Response(gen_frames(), mimetype='multipart/x-mixed-replace;
+           boundary=frame')
+       95
+       96   @app.route('/gesture_status')
+       97   def gesture_status():
+       70 -     global current_gesture
+       71 -     return jsonify({"gesture": current_gesture})
+      ════════════════════════════════════════════════════════════════════════════════════════    
+       98 +     global current_gesture, machine_state
+       99 +     if 'username' not in session:
+      100 +         return jsonify({"error": "Unauthorized"}), 401
+      101 +     
+      102 +     return jsonify({
+      103 +         "gesture": current_gesture,
+      104 +         "machine_state": machine_state,
+      105 +         "username": session['username']
+      106 +     })
+      107
+      108   if __name__ == '__main__':
+      109       app.run(debug=True, host='0.0.0.0', port=5000)
+
+  ✓  WriteFile  login.html → Accepted (+23, -0)
+
+       1 <!DOCTYPE html>
+       2 <html lang="pt-br">
+       3 <head>
+       4     <meta charset="UTF-8">
+       5     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+       6     <title>Login - Controle de Máquina</title>
+       7     <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+       8 </head>
+       9 <body>
+      10     <div class="container login-container">
+      11         <h1>Login do Operador</h1>
+      12         <p>Informe seu nome para acessar o controle da máquina.</p>
+      13
+      14         <form action="/login" method="post" class="login-form">
+      15             <div class="input-group">
+      16                 <label for="username">Nome do Usuário:</label>
+      17                 <input type="text" id="username" name="username" required
+         placeholder="Digite seu nome...">
+      18             </div>
+      19             <button type="submit" class="btn-login">Entrar no Sistema</button>
+      20         </form>
+      21     </div>
+      22 </body>
+      23 </html>
+
+  ✓  Edit  index.html → Accepted (+22, -4)
+
+       3   <head>
+       4       <meta charset="UTF-8">
+       5       <meta name="viewport" content="width=device-width, initial-scale=1.0">
+       6 -     <title>Detector de Joinha</title>
+       6 +     <title>Controle de Máquina por Gestos</title>
+       7 +     <link rel="stylesheet" href="{{ url_for('static', filename='static/style.css'
+         if 'static/' in url_for('static', filename='style.css') else 'style.css') }}">
+       8       <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+       9   </head>
+      10   <body>
+      11       <div class="container">
+      11 -         <h1>Detector de Joinha</h1>
+      12 +         <header>
+      13 +             <h1>Controle de Máquina</h1>
+      14 +             <div class="user-info">
+      15 +                 Usuário: <strong id="current-user">{{ username }}</strong> | 
+      16 +                 <a href="/logout">Sair</a>
+      17 +             </div>
+      18 +         </header>
+      19
+      20           <div class="main-content">
+      21               <div class="video-section">
+      25
+      26                   <div id="status-indicator" class="status neutral">
+      27                       <span id="status-dot">🔴</span>
+      21 -                     <span id="status-text">Nenhum joinha detectado</span>
+      ════════════════════════════════════════════════════════════════════════════════════════    
+      28 +                     <span id="status-text">Aguardando gesto...</span>
+      29                   </div>
+      30 +
+      31 +                 <div class="machine-simulation">
+      32 +                     <h3>Estado da Máquina</h3>
+      33 +                     <div id="machine-display" class="machine-off">
+      34 +                         DESLIGADA
+      35 +                     </div>
+      36 +                     <div class="machine-controls-info">
+      37 +                         <span>👍 Ligar (Joinha)</span>
+      38 +                         <span>🤙 Desligar (Hang Loose)</span>
+      39 +                     </div>
+      40 +                 </div>
+      41               </div>
+      42
+      43               <div class="log-section">
+      26 -                 <h2>Registros</h2>
+      ════════════════════════════════════════════════════════════════════════════════════════    
+      44 +                 <h2>Histórico de Ações</h2>
+      45                   <ul id="log-list">
+      46                       <!-- Registros aparecerão aqui -->
+      47                   </ul>
+
+  ✓  Edit  script.js → Accepted (+33, -12)
+
+       3   const statusIndicator = document.getElementById('status-indicator');
+       4   const statusDot = document.getElementById('status-dot');
+       5   const statusText = document.getElementById('status-text');
+       6 + const machineDisplay = document.getElementById('machine-display');
+       7 + const currentUser = document.getElementById('current-user').textContent;
+       8
+       9   async function checkGesture() {
+      10       try {
+      11           const response = await fetch('/gesture_status');
+      12 +         if (response.status === 401) {
+      13 +             window.location.href = '/login';
+      14 +             return;
+      15 +         }
+      16           const data = await response.json();
+      11 -         const detectedGesture = data.gesture;
+      12 - 
+      13 -         updateStatusUI(detectedGesture);
+      14 -         handleRegistration(detectedGesture);
+      17
+      18 +         updateStatusUI(data.gesture);
+      19 +         updateMachineUI(data.machine_state);
+      20 +         handleRegistration(data.gesture, data.machine_state);
+      21 +
+      22       } catch (error) {
+      23           console.error('Erro ao buscar status:', error);
+      24       }
+      ════════════════════════════════════════════════════════════════════════════════════════    
+      36       } else {
+      37           statusIndicator.className = 'status neutral';
+      38           statusDot.textContent = '🔴';
+      33 -         statusText.textContent = 'Nenhum gesto detectado';
+      39 +         statusText.textContent = 'Aguardando gesto...';
+      40       }
+      41   }
+      42
+      37 - function handleRegistration(gesture) {
+      38 -     // Se um gesto foi detectado e é diferente do último gesto registrado (ou se       
+         não havia gesto)
+      43 + function updateMachineUI(state) {
+      44 +     if (state === 'LIGADA') {
+      45 +         machineDisplay.textContent = 'LIGADA';
+      46 +         machineDisplay.className = 'machine-on';
+      47 +     } else {
+      48 +         machineDisplay.textContent = 'DESLIGADA';
+      49 +         machineDisplay.className = 'machine-off';
+      50 +     }
+      51 + }
+      52 + 
+      53 + function handleRegistration(gesture, machineState) {
+      54 +     // Registra apenas se o gesto mudou e não é nulo
+      55       if (gesture && gesture !== currentActiveGesture) {
+      40 -         registerGesture(gesture);
+      ════════════════════════════════════════════════════════════════════════════════════════    
+      56 +         registerAction(gesture, machineState);
+      57           currentActiveGesture = gesture;
+      58       }
+      43 -     // Se nenhum gesto for detectado, resetamos o estado para permitir novo
+         registro
+      ════════════════════════════════════════════════════════════════════════════════════════    
+      59 +     // Reseta o gesto atual se nenhum gesto for detectado para permitir nova
+         detecção do mesmo gesto
+      60       else if (!gesture) {
+      61           currentActiveGesture = null;
+      62       }
+      63   }
+      64
+      49 - function registerGesture(gesture) {
+      ════════════════════════════════════════════════════════════════════════════════════════    
+      65 + function registerAction(gesture, machineState) {
+      66       const now = new Date();
+      67       const timestamp = now.toLocaleTimeString('pt-BR', {
+      68           hour: '2-digit',
+      70           second: '2-digit'
+      71       });
+      72
+      57 -     const displayName = gesture === 'joinha' ? 'Joinha' : 'Hang Loose';
+      ════════════════════════════════════════════════════════════════════════════════════════    
+      73 +     const gestureName = gesture === 'joinha' ? 'Joinha' : 'Hang Loose';
+      74
+      75       const li = document.createElement('li');
+      76       li.className = 'log-item';
+      77       li.innerHTML = `
+      62 -         <span class="log-text"><strong>${displayName}</strong> detectado —
+         ${timestamp}</span>
+      ════════════════════════════════════════════════════════════════════════════════════════    
+      78 +         <div class="log-content">
+      79 +             <span class="log-user">👤 ${currentUser}</span>
+      80 +             <span class="log-time">🕒 ${timestamp}</span>
+      81 +             <span class="log-gesture">👋 Gesto:
+         <strong>${gestureName}</strong></span>
+      82 +             <span class="log-machine">⚙️ Máquina:
+         <strong>${machineState}</strong></span>
+      83 +         </div>
+      84       `;
+      85
+      86       // Adiciona no topo da lista
+
+  ✓  Edit  style.css → Accepted (+155, -27)
+
+       14       padding: 2rem;
+       15       border-radius: 12px;
+       16       box-shadow: 0 10px 25px rgba(0,0,0,0.1);
+       17 -     max-width: 1000px;
+       17 +     max-width: 1100px;
+       18       width: 95%;
+       19   }
+       20
+       21 + header {
+       22 +     display: flex;
+       23 +     justify-content: space-between;
+       24 +     align-items: center;
+       25 +     margin-bottom: 1.5rem;
+       26 +     padding-bottom: 1rem;
+       27 +     border-bottom: 2px solid #eef2f7;
+       28 + }
+       29 + 
+       30 + header h1 {
+       31 +     margin: 0;
+       32 +     font-size: 1.8rem;
+       33 +     color: #1a73e8;
+       34 + }
+       35 + 
+       36 + .user-info {
+       37 +     font-size: 0.9rem;
+       38 +     color: #666;
+       39 + }
+       40 + 
+       41 + .user-info strong {
+       42 +     color: #333;
+       43 + }
+       44 + 
+       45 + .user-info a {
+       46 +     color: #dc3545;
+       47 +     text-decoration: none;
+       48 +     margin-left: 10px;
+       49 +     font-weight: bold;
+       50 + }
+       51 + 
+       52   .main-content {
+       53       display: flex;
+       54       gap: 2rem;
+       24 -     margin-top: 1rem;
+      ════════════════════════════════════════════════════════════════════════════════════════    
+       55       align-items: flex-start;
+       56   }
+       57
+       58   .video-section {
+       29 -     flex: 2;
+      ════════════════════════════════════════════════════════════════════════════════════════    
+       59 +     flex: 1.5;
+       60   }
+       61
+       62   .log-section {
+       64       background: #f8f9fa;
+       65       border-radius: 8px;
+       66       padding: 1rem;
+       37 -     max-height: 500px;
+      ════════════════════════════════════════════════════════════════════════════════════════    
+       67 +     height: 600px;
+       68       display: flex;
+       69       flex-direction: column;
+       70       border: 1px solid #dee2e6;
+      ════════════════════════════════════════════════════════════════════════════════════════    
+       87   }
+       88
+       89   .log-item {
+       60 -     padding: 10px 15px;
+      ════════════════════════════════════════════════════════════════════════════════════════    
+       90 +     padding: 12px;
+       91       border-bottom: 1px solid #edf2f7;
+       92       animation: slideIn 0.3s ease-out;
+       93       background: white;
+       64 -     margin-bottom: 5px;
+      ════════════════════════════════════════════════════════════════════════════════════════    
+       94 +     margin-bottom: 8px;
+       95       border-radius: 6px;
+       96       box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+       97   }
+       98
+       69 - .log-text {
+       70 -     font-size: 0.95rem;
+       71 -     color: #2d3748;
+      ════════════════════════════════════════════════════════════════════════════════════════    
+       99 + .log-content {
+      100 +     display: flex;
+      101 +     flex-direction: column;
+      102 +     gap: 4px;
+      103 +     font-size: 0.85rem;
+      104   }
+      105
+       74 - .log-text strong {
+      ════════════════════════════════════════════════════════════════════════════════════════    
+      106 + .log-user { font-weight: bold; color: #4a5568; }
+      107 + .log-time { color: #718096; }
+      108 + .log-gesture { color: #2d3748; }
+      109 + .log-machine { color: #2d3748; }
+      110 + 
+      111 + .log-gesture strong, .log-machine strong {
+
+  ✓  Edit  index.html → Accepted (+0, -1)
+
+       4       <meta charset="UTF-8">
+       5       <meta name="viewport" content="width=device-width, initial-scale=1.0">
+       6       <title>Controle de Máquina por Gestos</title>
+       7 -     <link rel="stylesheet" href="{{ url_for('static', filename='static/style.css'      
+         if 'static/' in url_for('static', filename='style.css') else 'style.css') }}">
+       7       <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">       
+       8   </head>
+       9   <body>
+
+  Finalizing Implementation: Finalizing the adaptation and verifying the implementation.
+
+
+✦ Adaptei o projeto para incluir o sistema de controle de máquina por reconhecimento de gestos,
+  conforme solicitado.
+
+  Alterações Realizadas:
+
+   1. Backend (app.py):
+       * Implementei controle de sessão para o login do usuário.
+       * Adicionei rotas /login, /logout e protegida a rota principal /.
+       * Criei uma variável global machine_state para rastrear se a máquina está LIGADA ou
+         DESLIGADA.
+       * A lógica de atualização da máquina foi integrada ao processamento de frames: Joinha liga
+         a máquina, Hang Loose desliga.
+
+   2. Interface de Login (login.html):
+       * Criei uma nova tela de login simples onde o operador informa seu nome.
+
+   3. Interface Principal (index.html e style.css):
+       * Exibição do nome do usuário logado.
+       * Adição de uma seção de Simulação da Máquina com feedback visual dinâmico (verde pulsa
+         quando ligada, cinza quando desligada).
+       * Refatoração do layout para acomodar o histórico e o feed de vídeo de forma responsiva.
+
+   4. Lógica de Frontend (script.js):
+       * O histórico agora registra: Nome do Usuário, Horário da Ação, Gesto Identificado e Estado
+         da Máquina após a ação.
+       * Implementei verificação de status a cada 300ms para garantir que a interface reflita o
+         estado da máquina em tempo real.
+
+   5. Reconhecimento de Gestos (gesture_detector.py):
+       * A classe já possuía a lógica para hang_loose (Polegar e Mínimo abertos), que agora é     
+         utilizada para desligar a máquina.
+
+  Como testar:
+   1. Inicie o servidor com python app.py.
+   2. Acesse http://localhost:5000.
+   3. Faça login com seu nome.
+   4. Use o gesto de Joinha (👍) para ver a máquina ligar (o painel ficará verde).
+   5. Use o gesto de Hang Loose (🤙) para ver a máquina desligar (o painel ficará cinza).
+   6. Verifique o registro detalhado no painel lateral de Histórico de Ações.
