@@ -1,0 +1,23 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Login - Controle de Máquina</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+    <div class="container login-container">
+        <h1>Login do Operador</h1>
+        <p>Informe seu nome para acessar o controle da máquina.</p>
+        
+        <form action="/login" method="post" class="login-form">
+            <div class="input-group">
+                <label for="username">Nome do Usuário:</label>
+                <input type="text" id="username" name="username" required placeholder="Digite seu nome...">
+            </div>
+            <button type="submit" class="btn-login">Entrar no Sistema</button>
+        </form>
+    </div>
+</body>
+</html>

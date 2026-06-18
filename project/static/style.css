@@ -14,19 +14,49 @@ body {
     padding: 2rem;
     border-radius: 12px;
     box-shadow: 0 10px 25px rgba(0,0,0,0.1);
-    max-width: 1000px;
+    max-width: 1100px;
     width: 95%;
+}
+
+header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 1.5rem;
+    padding-bottom: 1rem;
+    border-bottom: 2px solid #eef2f7;
+}
+
+header h1 {
+    margin: 0;
+    font-size: 1.8rem;
+    color: #1a73e8;
+}
+
+.user-info {
+    font-size: 0.9rem;
+    color: #666;
+}
+
+.user-info strong {
+    color: #333;
+}
+
+.user-info a {
+    color: #dc3545;
+    text-decoration: none;
+    margin-left: 10px;
+    font-weight: bold;
 }
 
 .main-content {
     display: flex;
     gap: 2rem;
-    margin-top: 1rem;
     align-items: flex-start;
 }
 
 .video-section {
-    flex: 2;
+    flex: 1.5;
 }
 
 .log-section {
@@ -34,7 +64,7 @@ body {
     background: #f8f9fa;
     border-radius: 8px;
     padding: 1rem;
-    max-height: 500px;
+    height: 600px;
     display: flex;
     flex-direction: column;
     border: 1px solid #dee2e6;
@@ -57,22 +87,126 @@ body {
 }
 
 .log-item {
-    padding: 10px 15px;
+    padding: 12px;
     border-bottom: 1px solid #edf2f7;
     animation: slideIn 0.3s ease-out;
     background: white;
-    margin-bottom: 5px;
+    margin-bottom: 8px;
     border-radius: 6px;
     box-shadow: 0 1px 3px rgba(0,0,0,0.05);
 }
 
-.log-text {
-    font-size: 0.95rem;
-    color: #2d3748;
+.log-content {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    font-size: 0.85rem;
 }
 
-.log-text strong {
+.log-user { font-weight: bold; color: #4a5568; }
+.log-time { color: #718096; }
+.log-gesture { color: #2d3748; }
+.log-machine { color: #2d3748; }
+
+.log-gesture strong, .log-machine strong {
     color: #3182ce;
+}
+
+/* Login Styles */
+.login-container {
+    max-width: 400px;
+}
+
+.login-form {
+    margin-top: 2rem;
+    text-align: left;
+}
+
+.input-group {
+    margin-bottom: 1.5rem;
+}
+
+.input-group label {
+    display: block;
+    margin-bottom: 0.5rem;
+    font-weight: bold;
+    color: #4a5568;
+}
+
+.input-group input {
+    width: 100%;
+    padding: 10px;
+    border: 1px solid #cbd5e0;
+    border-radius: 6px;
+    box-sizing: border-box;
+}
+
+.btn-login {
+    width: 100%;
+    padding: 12px;
+    background-color: #1a73e8;
+    color: white;
+    border: none;
+    border-radius: 6px;
+    font-weight: bold;
+    cursor: pointer;
+    transition: background 0.2s;
+}
+
+.btn-login:hover {
+    background-color: #1557b0;
+}
+
+/* Machine Simulation */
+.machine-simulation {
+    margin-top: 2rem;
+    padding: 1.5rem;
+    background: #f8f9fa;
+    border-radius: 8px;
+    border: 2px dashed #cbd5e0;
+}
+
+.machine-simulation h3 {
+    margin-top: 0;
+    font-size: 1rem;
+    color: #4a5568;
+}
+
+#machine-display {
+    font-size: 2.5rem;
+    font-weight: 900;
+    padding: 1.5rem;
+    border-radius: 8px;
+    margin-bottom: 1rem;
+    transition: all 0.5s ease;
+}
+
+.machine-off {
+    background: #e2e8f0;
+    color: #718096;
+    text-shadow: 1px 1px 2px rgba(0,0,0,0.1);
+}
+
+.machine-on {
+    background: #48bb78;
+    color: white;
+    box-shadow: 0 0 20px rgba(72, 187, 120, 0.4);
+    text-shadow: 0 0 10px rgba(255,255,255,0.5);
+    animation: pulse 2s infinite;
+}
+
+.machine-controls-info {
+    display: flex;
+    justify-content: center;
+    gap: 20px;
+    font-size: 0.9rem;
+    color: #718096;
+}
+
+@keyframes pulse {
+    0% { transform: scale(1); }
+    50% { transform: scale(1.02); }
+    100% { transform: scale(1); }
 }
 
 @keyframes slideIn {
@@ -80,20 +214,12 @@ body {
     to { opacity: 1; transform: translateX(0); }
 }
 
-@keyframes fadeIn {
-    from { opacity: 0; transform: translateY(-10px); }
-    to { opacity: 1; transform: translateY(0); }
-}
-
-@media (max-width: 768px) {
+@media (max-width: 900px) {
     .main-content {
         flex-direction: column;
     }
-}
-
-h1 {
-    color: #1a73e8;
-    margin-bottom: 1.5rem;
+    .video-section { width: 100%; }
+    .log-section { width: 100%; height: 400px; }
 }
 
 .video-container {
@@ -120,21 +246,23 @@ h1 {
     justify-content: center;
     gap: 10px;
     transition: all 0.3s ease;
+    margin-bottom: 1rem;
 }
 
 .status.neutral {
-    background-color: #ffebee;
-    color: #c62828;
+    background-color: #f7fafc;
+    color: #718096;
+    border: 1px solid #e2e8f0;
 }
 
 .status.active {
     background-color: #e8f5e9;
     color: #2e7d32;
-    transform: scale(1.05);
+    transform: scale(1.02);
 }
 
 .status.active.hang-loose {
-    background-color: #e3f2fd;
-    color: #1565c0;
-    border: 2px solid #1565c0;
+    background-color: #ebf8ff;
+    color: #2b6cb0;
+    border: 1px solid #bee3f8;
 }

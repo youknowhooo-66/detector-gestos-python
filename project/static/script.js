@@ -3,15 +3,21 @@ const logList = document.getElementById('log-list');
 const statusIndicator = document.getElementById('status-indicator');
 const statusDot = document.getElementById('status-dot');
 const statusText = document.getElementById('status-text');
+const machineDisplay = document.getElementById('machine-display');
+const currentUser = document.getElementById('current-user').textContent;
 
 async function checkGesture() {
     try {
         const response = await fetch('/gesture_status');
+        if (response.status === 401) {
+            window.location.href = '/login';
+            return;
+        }
         const data = await response.json();
-        const detectedGesture = data.gesture;
-
-        updateStatusUI(detectedGesture);
-        handleRegistration(detectedGesture);
+        
+        updateStatusUI(data.gesture);
+        updateMachineUI(data.machine_state);
+        handleRegistration(data.gesture, data.machine_state);
         
     } catch (error) {
         console.error('Erro ao buscar status:', error);
@@ -30,23 +36,33 @@ function updateStatusUI(gesture) {
     } else {
         statusIndicator.className = 'status neutral';
         statusDot.textContent = '🔴';
-        statusText.textContent = 'Nenhum gesto detectado';
+        statusText.textContent = 'Aguardando gesto...';
     }
 }
 
-function handleRegistration(gesture) {
-    // Se um gesto foi detectado e é diferente do último gesto registrado (ou se não havia gesto)
+function updateMachineUI(state) {
+    if (state === 'LIGADA') {
+        machineDisplay.textContent = 'LIGADA';
+        machineDisplay.className = 'machine-on';
+    } else {
+        machineDisplay.textContent = 'DESLIGADA';
+        machineDisplay.className = 'machine-off';
+    }
+}
+
+function handleRegistration(gesture, machineState) {
+    // Registra apenas se o gesto mudou e não é nulo
     if (gesture && gesture !== currentActiveGesture) {
-        registerGesture(gesture);
+        registerAction(gesture, machineState);
         currentActiveGesture = gesture;
     } 
-    // Se nenhum gesto for detectado, resetamos o estado para permitir novo registro
+    // Reseta o gesto atual se nenhum gesto for detectado para permitir nova detecção do mesmo gesto
     else if (!gesture) {
         currentActiveGesture = null;
     }
 }
 
-function registerGesture(gesture) {
+function registerAction(gesture, machineState) {
     const now = new Date();
     const timestamp = now.toLocaleTimeString('pt-BR', { 
         hour: '2-digit', 
@@ -54,12 +70,17 @@ function registerGesture(gesture) {
         second: '2-digit' 
     });
 
-    const displayName = gesture === 'joinha' ? 'Joinha' : 'Hang Loose';
+    const gestureName = gesture === 'joinha' ? 'Joinha' : 'Hang Loose';
     
     const li = document.createElement('li');
     li.className = 'log-item';
     li.innerHTML = `
-        <span class="log-text"><strong>${displayName}</strong> detectado — ${timestamp}</span>
+        <div class="log-content">
+            <span class="log-user">👤 ${currentUser}</span>
+            <span class="log-time">🕒 ${timestamp}</span>
+            <span class="log-gesture">👋 Gesto: <strong>${gestureName}</strong></span>
+            <span class="log-machine">⚙️ Máquina: <strong>${machineState}</strong></span>
+        </div>
     `;
 
     // Adiciona no topo da lista

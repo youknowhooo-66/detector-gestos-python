@@ -3,12 +3,18 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Detector de Joinha</title>
+    <title>Controle de Máquina por Gestos</title>
     <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
 </head>
 <body>
     <div class="container">
-        <h1>Detector de Joinha</h1>
+        <header>
+            <h1>Controle de Máquina</h1>
+            <div class="user-info">
+                Usuário: <strong id="current-user">{{ username }}</strong> | 
+                <a href="/logout">Sair</a>
+            </div>
+        </header>
         
         <div class="main-content">
             <div class="video-section">
@@ -18,12 +24,23 @@
 
                 <div id="status-indicator" class="status neutral">
                     <span id="status-dot">🔴</span>
-                    <span id="status-text">Nenhum joinha detectado</span>
+                    <span id="status-text">Aguardando gesto...</span>
+                </div>
+                
+                <div class="machine-simulation">
+                    <h3>Estado da Máquina</h3>
+                    <div id="machine-display" class="machine-off">
+                        DESLIGADA
+                    </div>
+                    <div class="machine-controls-info">
+                        <span>👍 Ligar (Joinha)</span>
+                        <span>🤙 Desligar (Hang Loose)</span>
+                    </div>
                 </div>
             </div>
 
             <div class="log-section">
-                <h2>Registros</h2>
+                <h2>Histórico de Ações</h2>
                 <ul id="log-list">
                     <!-- Registros aparecerão aqui -->
                 </ul>
